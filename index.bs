@@ -876,9 +876,10 @@ interface |B| that inherits from |A|, and so on.
 
     1.  Let |result| be « ».
     1.  Let |interface| be |I|.
-    1.  While |interface| exists:
+    1.  While |interface| is not null:
         1.  [=list/Append=] |interface| to |result|.
-        1.  Let |interface| be the [=interface=] that |I| [=interface/inherits=] from, if any.
+        1.  Set |interface| to the [=interface=] that |I| [=interface/inherits=] from, if any, and
+            null otherwise.
     1.  Return |result|.
 </div>
 
@@ -12364,6 +12365,7 @@ object is associated with.
   implementing the interface">create an object implementing the interface</dfn> |interface| in the
   Realm |realm|, perform the following steps:
 
+    1.  Assert: |interface| is [=exposed=] in |realm|.
     1.  Let |instance| be a newly created [=ECMAScript/object=] in |realm|.
     1.  Set |instance|'s essential internal methods to the definitions specified in
         [=ECMA-262 Ordinary object internal methods and internal slots=].
