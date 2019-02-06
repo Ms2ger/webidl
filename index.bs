@@ -12377,13 +12377,9 @@ object is associated with.
             given |realm|.
         1.  [=Define the unforgeable regular attributes=] of |ancestor interface| on |instance|,
             given |realm|.
-    1.  If |interfaces| [=list/contains=] an [=interface=] which is declared with the [{{Global}}]
-        [=extended attribute=], then:
-        1.  [=list/iterate|For every=] [=interface=] |ancestor interface| in |interfaces|:
-            1.  [=Define the regular operations=] of |ancestor interface| on |instance|, given
-                |realm|.
-            1.  [=Define the regular attributes=] of |ancestor interface| on |instance|, given
-                |realm|.
+    1.  If |interface| is declared with the [{{Global}}] [=extended attribute=], then:
+        1.  [=Define the regular operations=] of |interface| on |instance|, given |realm|.
+        1.  [=Define the regular attributes=] of |interface| on |instance|, given |realm|.
         1.  Set |instance|.\[[SetPrototypeOf]] as defined in [[#platform-object-setprototypeof]].
     1.  Otherwise, if |interfaces| contains an [=interface=] which
         [=support indexed properties|supports indexed properties=],
