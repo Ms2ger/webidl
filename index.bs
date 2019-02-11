@@ -125,6 +125,7 @@ urlPrefix: https://tc39.github.io/ecma262/; spec: ECMA-262
         text: DefinePropertyOrThrow; url: sec-definepropertyorthrow
         text: DetachArrayBuffer; url: sec-detacharraybuffer
         text: Get; url: sec-get-o-p
+        text: GetFunctionRealm; url: sec-getfunctionrealm
         text: GetIterator; url: sec-getiterator
         text: GetMethod; url: sec-getmethod
         text: IsAccessorDescriptor; url: sec-isaccessordescriptor
@@ -12361,15 +12362,15 @@ which global environment (or, by proxy, which global object) each platform
 object is associated with.
 
 <div algorithm>
-  To create a <dfn export>new</dfn> object implementing the interface |interface| in the
-  Realm |realm|, with optional `new.target` value |newTarget|, perform the following steps:
+  To create a <dfn export>new</dfn> object implementing the interface |interface|, with either
+  a Realm |realm| or a `new.target` value |newTarget|, perform the following steps:
 
+    1.  If |newTarget| is provided, then:
+        1.  Set |realm| to [$GetFunctionRealm$](|newTarget|).
     1.  Assert: |interface| is [=exposed=] in |realm|.
     1.  Let prototype be the [=interface prototype object=] for |interface| in
         |realm|.
     1.  If |newTarget| is provided, then:
-        1.  Issue: If we just pass {{NewTarget}} through in a constructor, would this not
-            always be defined (sometimes to the [=interface object=] itself)?
         1.  Let |newTargetPrototype| be [=?=] [$Get$](|newTarget|, "prototype").
         1.  If [$Type$](|newTargetPrototype|) is Object, then set |prototype| to
             |newTargetPrototype|.
