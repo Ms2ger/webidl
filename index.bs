@@ -13361,7 +13361,7 @@ Each {{DOMException}} object has an associated <dfn for="DOMException">name</dfn
 The <dfn constructor for="DOMException"><code>DOMException(|message|, |name|)</code></dfn>
 constructor, when invoked, must run these steps:
 
-1. Let |e| be a [=new=] {{DOMException}} object in {{NewTarget}}'s Realm, with {{NewTarget}}.
+1. Let |e| be a [=new=] {{DOMException}} object with {{NewTarget}}.
 1. Set |e|'s [=DOMException/name=] to |name|.
 1. Set |e|'s [=DOMException/message=] to |message|.
 1. Return |e|.
