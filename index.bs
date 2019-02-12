@@ -10714,11 +10714,13 @@ the <code>typeof</code> operator will return "function" when applied to an inter
         1.  Let &lt;|constructor|, |values|&gt; be the result
             of passing |S| and |args|.
             to the [=overload resolution algorithm=].
-        1.  Let |R| be the result of performing
-            the actions listed in the description of |constructor|
-            with |values| as the argument values.
+        1.  Let |object| be a [=new-internal|new=] object implementing |I|, with |realm| and
+            {{NewTarget}}.
+        1.  Perform the actions listed in the description of |constructor|
+            with |values| as the argument values
+            and |object| as the <emu-val>this</emu-val> value.
             Rethrow any exceptions.
-        1.  Let |O| be the result of [=converted to an ECMAScript value|converting=] |R|
+        1.  Let |O| be the result of [=converted to an ECMAScript value|converting=] |object|
             to an ECMAScript [=interface type=] value |I|.
         1.  Assert: |O| is an object that implements |I|.
         1.  Assert: |O|.\[[Realm]] is equal to |realm|.
@@ -12362,11 +12364,17 @@ which global environment (or, by proxy, which global object) each platform
 object is associated with.
 
 <div algorithm>
-  To create a <dfn export>new</dfn> object implementing the interface |interface|, with either
-  a Realm |realm| or a `new.target` value |newTarget|, perform the following steps:
+  To create a <dfn export>new</dfn> object implementing the interface |interface|, with a Realm
+  |realm|, perform the following steps:
 
-    1.  If |newTarget| is provided, then:
-        1.  Set |realm| to [$GetFunctionRealm$](|newTarget|).
+    1.  Return the result of creating a [=new-internal|new=] object implementing |interface|, with
+        |realm| and no target.
+</div>
+
+<div algorithm>
+  To create a <dfn lt=new-internal>new</dfn> object implementing the interface |interface|, with
+  a Realm |realm| and optionally a target |newTarget|, perform the following steps:
+
     1.  Assert: |interface| is [=exposed=] in |realm|.
     1.  Let prototype be the [=interface prototype object=] for |interface| in
         |realm|.
