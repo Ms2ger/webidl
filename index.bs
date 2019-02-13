@@ -10658,12 +10658,10 @@ The name of the property is the given [=LegacyWindowAlias identifier|identifier=
 and its value is a reference to the [=interface object=] for the [=interface=].
 
 In addition, for every [{{NamedConstructor}}] extended attribute on an [=exposed=] interface,
-a corresponding property must exist on the ECMAScript global object.
+a corresponding property exists on the ECMAScript global object.
 The name of the property is the [{{NamedConstructor}}]'s [=NamedConstructor identifier|identifier=],
 and its value is an object called a <dfn id="dfn-named-constructor" export>named constructor</dfn>,
 which allows construction of objects that implement the interface.
-The property has the attributes
-{ \[[Writable]]: <emu-val>true</emu-val>, \[[Enumerable]]: <emu-val>false</emu-val>, \[[Configurable]]: <emu-val>true</emu-val> }.
 The characteristics of a named constructor are described in [[#named-constructors]].
 
 
@@ -12431,6 +12429,12 @@ object is associated with.
             1.  Assert: |interfaceObject| was created in the previous steps.
             1.  [=list/iterate|For every=] [=LegacyWindowAlias identifier|identifier=] |id| in
                 [{{LegacyWindowAlias}}]'s [=LegacyWindowAlias identifier|identifiers=]:
+                1.  Perform [=!=] [$CreateMethodProperty$](|target|, |id|, |interfaceObject|).
+        1.  If the |interface| is declared with a [{{NamedConstructor}}] [=extended attribute=],
+            then:
+            1.  [=list/iterate|For every=] [=NamedConstructor identifier=] |id| on |interface|:
+                1.  Let |interfaceObject| be the result of [=create a named constructor|creating
+                    a named constructor=] with |id| for |interface| in |realm|.
                 1.  Perform [=!=] [$CreateMethodProperty$](|target|, |id|, |interfaceObject|).
 </div>
 
