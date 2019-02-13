@@ -12373,7 +12373,7 @@ object is associated with.
 
 <div algorithm>
   To create a <dfn lt=new-internal>new</dfn> object implementing the interface |interface|, with
-  a Realm |realm| and optionally a target |newTarget|, perform the following steps:
+  a Realm |realm| and optionally a JavaScript function value |newTarget|, perform the following steps:
 
     1.  Assert: |interface| is [=exposed=] in |realm|.
     1.  Let prototype be the [=interface prototype object=] for |interface| in
