@@ -12388,6 +12388,9 @@ object is associated with.
             given |realm|.
         1.  [=Define the unforgeable regular attributes=] of |ancestor interface| on |instance|,
             given |realm|.
+        1.  toString
+        1.  iterator
+        1.  map/set
     1.  If |interface| is declared with the [{{Global}}] [=extended attribute=], then:
         1.  [=Define the regular operations=] of |interface| on |instance|, given |realm|.
         1.  [=Define the regular attributes=] of |interface| on |instance|, given |realm|.
