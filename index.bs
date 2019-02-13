@@ -10653,11 +10653,9 @@ The characteristics of an interface object are described in [[#interface-object]
 
 If the [{{LegacyWindowAlias}}] extended attribute was specified on an [=exposed=] interface,
 then for each [=LegacyWindowAlias identifier|identifier=] in [{{LegacyWindowAlias}}]'s [=LegacyWindowAlias identifier|identifiers=]
-there must be a corresponding property on the {{Window}} [=interface=].
+there exists a corresponding property on the {{Window}} global object.
 The name of the property is the given [=LegacyWindowAlias identifier|identifier=],
 and its value is a reference to the [=interface object=] for the [=interface=].
-The property has the attributes
-{ \[[Writable]]: <emu-val>true</emu-val>, \[[Enumerable]]: <emu-val>false</emu-val>, \[[Configurable]]: <emu-val>true</emu-val> }.
 
 In addition, for every [{{NamedConstructor}}] extended attribute on an [=exposed=] interface,
 a corresponding property must exist on the ECMAScript global object.
@@ -12428,6 +12426,12 @@ object is associated with.
             1.  Let |interfaceObject| be the result of [=create an interface object|creating
                 an interface object=] for |interface| with |id| in |realm|.
             1.  Perform [=!=] [$CreateMethodProperty$](|target|, |id|, |interfaceObject|).
+        1.  If the |interface| is declared with a [{{LegacyWindowAlias}}] [=extended attribute=],
+            and |target| implements the {{Window}} [=interface=], then:
+            1.  Assert: |interfaceObject| was created in the previous steps.
+            1.  [=list/iterate|For every=] [=LegacyWindowAlias identifier|identifier=] |id| in
+                [{{LegacyWindowAlias}}]'s [=LegacyWindowAlias identifier|identifiers=]:
+                1.  Perform [=!=] [$CreateMethodProperty$](|target|, |id|, |interfaceObject|).
 </div>
 
 The <dfn id="dfn-primary-interface" export>primary interface</dfn> of a platform object
