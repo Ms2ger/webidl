@@ -11867,8 +11867,6 @@ the value of the {{@@iterator}} property.
 If the interface has an [=asynchronously iterable declaration=], then the [=function object=] is
 the value of the {{@@asyncIterator}} property.
 
-
-
 <h5 id="es-iterable-keys">keys</h5>
 
 If the [=interface=] has an [=iterable declaration=],
