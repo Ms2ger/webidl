@@ -4091,6 +4091,143 @@ The following extended attributes are applicable to [=iterable declarations=]:
 </pre>
 
 
+<h4 id="idl-async-iterable">Asynchronously iterable declarations</h4>
+
+An [=interface=] can be declared to be asynchronously iterable by using an
+<dfn id="dfn-async-iterable-declaration" export>asynchronously iterable declaration</dfn>
+(matching <emu-nt><a href="#prod-AsyncIterable">AsyncIterable</a></emu-nt>) in the body of the
+[=interface=].
+
+<pre highlight="webidl" class="syntax">
+    interface interface_identifier {
+      async_iterable&lt;key_type, value_type&gt;;
+    };
+</pre>
+
+Objects that [=implement=] an [=interface=] that is declared to be asynchronously iterable support
+being iterated over asynchronously to obtain a sequence of values.
+
+Note: In the ECMAScript language binding, an interface that is asynchronously iterable will have
+<code class="idl">entries</code>, <code class="idl">keys</code>, <code class="idl">values</code>,
+and {{@@asyncIterator}} properties on its [=interface prototype object=].
+
+Prose accompanying an [=interface=] with an [=asynchronously iterable declaration=] must define a
+<dfn id="dfn-get-the-next-iteration-result>get the next iteration result</dfn> algorithm that
+returns the next value to be iterated over, as well as any necessary state to
+continue the iteration.
+
+[=Interfaces=] with an [=asynchronously iterable declaration=] must not have any
+[=interface members=] named "<code>entries</code>", "<code>forEach</code>", "<code>keys</code>", or
+"<code>values</code>", or have any [=inherited interfaces=] that have [=interface members=] with
+these names.
+
+<div class="example">
+
+    Consider the following interface <code class="idl">Storage</code>, which allows access to
+
+// =================================== XXX ===================================
+
+
+    a number of <code class="idl">Session</code> objects keyed by username:
+
+    <pre highlight="webidl">
+        [Exposed=Window]
+        interface SessionManager {
+          Session getSessionForUser(DOMString username);
+
+          iterable&lt;DOMString, Session&gt;;
+        };
+
+        [Exposed=Window]
+        interface Session {
+          readonly attribute DOMString username;
+          // ...
+        };
+    </pre>
+
+    The behavior of the iterator could be defined like so:
+
+    <blockquote>
+
+        The [=value pairs to iterate over=] are the list of key-value pairs with the key being the username and the
+        value being the open <code class="idl">Session</code> object on the <code class="idl">SessionManager</code>
+        object corresponding to that username, sorted by username.
+
+    </blockquote>
+
+    In the ECMAScript language binding, the [=interface prototype object=]
+    for the <code class=idl>SessionManager</code> [=interface=]
+    has a <code>values</code> method that is a function, which, when invoked,
+    returns an iterator object that itself has a <code>next</code> method that returns the
+    next value to be iterated over.  It has <code>keys</code> and <code>entries</code>
+    methods that iterate over the usernames of session objects
+    and username/<code class=idl>Session</code> object pairs, respectively.  It also has
+    a {{@@iterator}} method that allows a <code class="idl">SessionManager</code>
+    to be used in a <code>for..of</code> loop that has the same value as the
+    <code>entries</code> method:
+
+    <pre highlight="js">
+        // Get an instance of SessionManager.
+        // Assume that it has sessions for two users, "anna" and "brian".
+        var sm = getSessionManager();
+
+        typeof SessionManager.prototype.values;            // Evaluates to "function"
+        var it = sm.values();                              // values() returns an iterator object
+<!--    String(it);                                        // Evaluates to "[object SessionManager Iterator]"
+                                                           // TODO: https://github.com/heycam/webidl/issues/419 -->
+        typeof it.next;                                    // Evaluates to "function"
+
+        // This loop will log "anna" and then "brian".
+        for (;;) {
+          let result = it.next();
+          if (result.done) {
+            break;
+          }
+          let session = result.value;
+          console.log(session.username);
+        }
+
+        // This loop will also log "anna" and then "brian".
+        for (let username of sm.keys()) {
+          console.log(username);
+        }
+
+        // Yet another way of accomplishing the same.
+        for (let [username, session] of sm) {
+          console.log(username);
+        }
+    </pre>
+</div>
+
+An interface must not have more than one
+[=iterable declaration=].
+The [=inherited interfaces=]
+of an interface with an
+[=iterable declaration=]
+must not also have an
+[=iterable declaration=].
+An interface with an [=iterable declaration=]
+and its [=inherited interfaces=]
+must not have a
+[=maplike declaration=] or
+[=setlike declaration=].
+
+The following extended attributes are applicable to [=iterable declarations=]:
+[{{Exposed}}],
+[{{SecureContext}}].
+
+<pre class="grammar" id="prod-Iterable">
+    Iterable :
+        "iterable" "&lt;" TypeWithExtendedAttributes OptionalType "&gt;" ";"
+</pre>
+
+<pre class="grammar" id="prod-OptionalType">
+    OptionalType :
+        "," TypeWithExtendedAttributes
+        ε
+</pre>
+
+
 <h4 id="idl-maplike">Maplike declarations</h4>
 
 An [=interface=] can be declared to be
