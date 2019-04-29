@@ -105,6 +105,7 @@ urlPrefix: https://tc39.github.io/ecma262/; spec: ECMA-262
         text: %PromiseProto_then%; url: sec-promise.prototype.then
     type: const; for: ECMAScript
         url: sec-well-known-symbols
+            text: @@asyncIterator
             text: @@iterator
             text: @@toStringTag
             text: @@unscopables
@@ -1041,6 +1042,7 @@ The <dfn>qualified name</dfn> of an [=interface=] |interface| is defined as foll
         Stringifier
         StaticMember
         Iterable
+        AsyncIterable
         ReadOnlyMember
         ReadWriteAttribute
         ReadWriteMaplike
@@ -4098,7 +4100,7 @@ An [=interface=] can be declared to be asynchronously iterable by using an
 (matching <emu-nt><a href="#prod-AsyncIterable">AsyncIterable</a></emu-nt>) in the body of the
 [=interface=].
 
-<pre highlight="webidl" class="syntax">
+<pre class="syntax">
     interface interface_identifier {
       async_iterable&lt;key_type, value_type&gt;;
     };
@@ -4112,9 +4114,11 @@ Note: In the ECMAScript language binding, an interface that is asynchronously it
 and {{@@asyncIterator}} properties on its [=interface prototype object=].
 
 Prose accompanying an [=interface=] with an [=asynchronously iterable declaration=] must define a
-<dfn id="dfn-get-the-next-iteration-result>get the next iteration result</dfn> algorithm that
+<dfn id="dfn-get-the-next-iteration-result">get the next iteration result</dfn> algorithm that
 returns the next value to be iterated over, as well as any necessary state to
 continue the iteration.
+This algorithm receives a <b>[=this=]</b> value, which is an instance of the [=interface=] that it
+is defined for, and the <dfn export>current value</dfn>.
 
 [=Interfaces=] with an [=asynchronously iterable declaration=] must not have any
 [=interface members=] named "<code>entries</code>", "<code>forEach</code>", "<code>keys</code>", or
@@ -4123,19 +4127,15 @@ these names.
 
 <div class="example">
 
-    Consider the following interface <code class="idl">Storage</code>, which allows access to
+    Consider the following interface <code class="idl">SessionManager</code>, which allows access
+    to a number of <code class="idl">Session</code> objects keyed by username:
 
-// =================================== XXX ===================================
-
-
-    a number of <code class="idl">Session</code> objects keyed by username:
-
-    <pre highlight="webidl">
+    <pre>
         [Exposed=Window]
         interface SessionManager {
           Session getSessionForUser(DOMString username);
 
-          iterable&lt;DOMString, Session&gt;;
+          async_iterable&lt;DOMString, Session&gt;;
         };
 
         [Exposed=Window]
@@ -4149,21 +4149,31 @@ these names.
 
     <blockquote>
 
-        The [=value pairs to iterate over=] are the list of key-value pairs with the key being the username and the
-        value being the open <code class="idl">Session</code> object on the <code class="idl">SessionManager</code>
-        object corresponding to that username, sorted by username.
+        To [=get the next iteration result=] for <code class="idl">SessionManager</code>, run the
+        following steps:
+
+        1.  Let |key| be as follows:
+            <dl class=switch>
+            :If **current value** is not given
+            ::the username in **this**'s open sessions that is first in lexicographical order
+
+            :If **current value** is given
+            ::the username in **this**'s open sessions that is next in lexicographical order, after
+              **current value**
+            </dl>
+        1.  Let |session| be the <code class="idl">Session</code> object corresponding to |key|.
+        1.  Return (|username|, |session|) and |username|.
 
     </blockquote>
 
-    In the ECMAScript language binding, the [=interface prototype object=]
-    for the <code class=idl>SessionManager</code> [=interface=]
-    has a <code>values</code> method that is a function, which, when invoked,
-    returns an iterator object that itself has a <code>next</code> method that returns the
-    next value to be iterated over.  It has <code>keys</code> and <code>entries</code>
-    methods that iterate over the usernames of session objects
-    and username/<code class=idl>Session</code> object pairs, respectively.  It also has
-    a {{@@iterator}} method that allows a <code class="idl">SessionManager</code>
-    to be used in a <code>for..of</code> loop that has the same value as the
+    In the ECMAScript language binding, the [=interface prototype object=] for the
+    <code class=idl>SessionManager</code> [=interface=] has a <code>values</code> method that is a
+    function, which, when invoked, returns an asynchronous iterator object that itself has a
+    <code>next</code> method that returns the next value to be iterated over.
+    It has <code>keys</code> and <code>entries</code> methods that iterate over the usernames of
+    session objects and (username, <code class=idl>Session</code>) object pairs, respectively.
+    It also has a {{@@asyncIterator}} method that allows a <code class="idl">SessionManager</code>
+    to be used in a <code>for await..of</code> loop that has the same value as the
     <code>entries</code> method:
 
     <pre highlight="js">
@@ -4173,58 +4183,33 @@ these names.
 
         typeof SessionManager.prototype.values;            // Evaluates to "function"
         var it = sm.values();                              // values() returns an iterator object
-<!--    String(it);                                        // Evaluates to "[object SessionManager Iterator]"
-                                                           // TODO: https://github.com/heycam/webidl/issues/419 -->
         typeof it.next;                                    // Evaluates to "function"
 
         // This loop will log "anna" and then "brian".
-        for (;;) {
-          let result = it.next();
-          if (result.done) {
-            break;
-          }
-          let session = result.value;
-          console.log(session.username);
-        }
-
-        // This loop will also log "anna" and then "brian".
-        for (let username of sm.keys()) {
+        for await (let username of sm.keys()) {
           console.log(username);
         }
 
         // Yet another way of accomplishing the same.
-        for (let [username, session] of sm) {
+        for await (let [username, session] of sm) {
           console.log(username);
         }
     </pre>
 </div>
 
-An interface must not have more than one
-[=iterable declaration=].
-The [=inherited interfaces=]
-of an interface with an
-[=iterable declaration=]
-must not also have an
-[=iterable declaration=].
-An interface with an [=iterable declaration=]
-and its [=inherited interfaces=]
-must not have a
-[=maplike declaration=] or
-[=setlike declaration=].
+An [=interface=] must not have more than one [=asynchronously iterable declaration=].
+The [=inherited interfaces=] of an [=interface=] with an [=asynchronously iterable declaration=]
+must not also have an [=asynchronously iterable declaration=].
+An [=interface=] with an [=asynchronously iterable declaration=] and its [=inherited interfaces=]
+must not have a [=maplike declaration=], [=setlike declaration=], or [=iterable declaration=].
 
 The following extended attributes are applicable to [=iterable declarations=]:
 [{{Exposed}}],
 [{{SecureContext}}].
 
-<pre class="grammar" id="prod-Iterable">
-    Iterable :
-        "iterable" "&lt;" TypeWithExtendedAttributes OptionalType "&gt;" ";"
-</pre>
-
-<pre class="grammar" id="prod-OptionalType">
-    OptionalType :
-        "," TypeWithExtendedAttributes
-        ε
+<pre class="grammar" id="prod-AsyncIterable">
+    AsyncIterable :
+        "async_iterable" "&lt;" TypeWithExtendedAttributes "," TypeWithExtendedAttributes "&gt;" ";"
 </pre>
 
 
@@ -4298,6 +4283,7 @@ also have a [=maplike declaration=].
 A maplike interface and its [=inherited interfaces=]
 must not have an
 [=iterable declaration=],
+an [=asynchronously iterable declaration=],
 a [=setlike declaration=], or
 an [=indexed property getter=].
 
@@ -4391,6 +4377,7 @@ also have a [=setlike declaration=].
 A setlike interface and its [=inherited interfaces=]
 must not have an
 [=iterable declaration=],
+an [=asynchronously iterable declaration=],
 a [=maplike declaration=], or
 an [=indexed property getter=].
 
@@ -8942,6 +8929,7 @@ with the same [=identifier=].
 There also must not be more than
 one [=stringifier=]
 or more than one [=iterable declaration=],
+[=asynchronously iterable declaration=],
 [=maplike declaration=] or
 [=setlike declaration=]
 across those interfaces.
@@ -11714,6 +11702,44 @@ and the String "<code>values</code>"
 if the interface has a [=setlike declaration=].
 
 
+<h5 id="es-async-iterator">@@asyncIterator</h5>
+
+If the [=interface=] has an [=asynchronously iterable declaration=], then a property must exist
+whose name is the {{@@asyncIterator}} symbol, with attributes
+{ \[[Writable]]: <emu-val>true</emu-val>, \[[Enumerable]]: <emu-val>false</emu-val>, \[[Configurable]]: <emu-val>true</emu-val> }
+and whose value is a [=function object=].
+
+The location of the property is determined as follows:
+
+*   If the interface was declared with the [{{Global}}] [=extended attribute=],
+    then the property exists on the single object that [=implements=] the interface.
+*   Otherwise, the property exists solely on the interface’s [=interface prototype object=].
+
+<div algorithm="to invoke the @@asyncIterator property">
+
+    The [=function object=] is a [=built-in function object=] that, when invoked, must behave as
+    follows:
+
+    1.  Let |object| be the result of calling <a abstract-op>ToObject</a> on the <emu-val>this</emu-val> value.
+    1.  If |object| [=is a platform object=], then [=perform a security check=], passing:
+        *   the platform object |object|,
+        *   the identifier "<code>@@asyncIterator</code>", and
+        *   the type "<code>method</code>".
+    1.  Let |interface| be the [=interface=] the [=iterable declaration=] is on.
+    1.  If |object| does not [=implement=] |interface|, then [=ECMAScript/throw=] a
+        {{ECMAScript/TypeError}}.
+    1.  Let |iterator| be a newly created [=default asynchronous iterator object=] for |interface|
+        with |object| as its target and iterator kind "<code>key+value</code>".
+    1.  Return |iterator|.
+</div>
+
+The value of the {{@@asyncIterator}} [=function object=]’s <code class="idl">length</code> property
+is the Number value <emu-val>0</emu-val>.
+
+The value of the {{@@asyncIterator}} [=function object=]’s <code class="idl">name</code> property
+is the String value "<code>entries</code>".
+
+
 <h5 id="es-forEach">forEach</h5>
 
 If the [=interface=] has any of the following:
@@ -11820,7 +11846,7 @@ property is the String value "<code>forEach</code>".
 
 <h5 id="es-iterable-entries">entries</h5>
 
-If the [=interface=] has an [=iterable declaration=],
+If the [=interface=] has an [=iterable declaration=] or an [=asynchronously iterable declaration=],
 then an <code class="idl">entries</code> data property must exist with attributes
 { \[[Writable]]: <emu-val>true</emu-val>, \[[Enumerable]]: <emu-val>true</emu-val>, \[[Configurable]]: <emu-val>true</emu-val> }
 and whose value is a [=function object=].
@@ -11837,6 +11863,10 @@ then the [=function object=] is {{%ArrayProto_entries%}}.
 If the interface has a [=pair iterator=],
 then the [=function object=] is
 the value of the {{@@iterator}} property.
+
+If the interface has an [=asynchronously iterable declaration=], then the [=function object=] is
+the value of the {{@@asyncIterator}} property.
+
 
 
 <h5 id="es-iterable-keys">keys</h5>
