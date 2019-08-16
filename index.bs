@@ -8051,10 +8051,9 @@ records.
     An ECMAScript value |V| is [=converted to an IDL value|converted=]
     to an IDL <a interface lt="Promise">Promise<var ignore>T</var></a> value as follows:
 
-    1.  Let |promise| be [=!=] [$PromiseResolve$]({{%Promise%}}, |V|).
-    1.  Issue: this is not a record
-    1.  Return the IDL [=promise type=] value that is a reference to the
-        same object as |promise|.
+    1.  Let |promiseCapability| be ? [$NewPromiseCapability$]({{%Promise%}}).
+    1.  Perform [=?=] [$Call$](|promiseCapability|.\[[Resolve]], <emu-val>undefined</emu-val>, « |V| »).
+    1.  Return |promiseCapability|.
 </div>
 
 <p id="promise-to-es">
@@ -8072,9 +8071,9 @@ records.
     When a specification says to perform some steps once a promise is settled,
     the following steps must be followed:
 
-    1.  Let |promise| be the promise object of type <a interface lt="Promise">Promise&lt;|T|&gt;</a>.
-    1.  Let |onFulfilled| be a new [=built-in function object=] whose
-        behavior when invoked is as follows:
+    1.  Let |promise| be the {{ECMAScript/PromiseCapability}} of type
+        <a interface lt="Promise">Promise&lt;|T|&gt;</a>.
+    1.  Let |onFulfilled| be [=!=] [$CreateBuiltinFunction$](the following steps, « »):
         1.  If |T| is {{void}}, then:
             1.  Return the result of performing any steps that were required to be run if the promise was fulfilled.
         1.  Otherwise, |T| is a type other than {{void}}:
@@ -8085,8 +8084,7 @@ records.
                 return <emu-val>undefined</emu-val>.
             1.  Otherwise, return the result of performing any steps that were required to be run if the promise was fulfilled,
                 with |value| as the promise’s value.
-    1.  Let |onRejected| be a new [=built-in function object=] whose
-        behavior when invoked is as follows:
+    1.  Let |onRejected| be [=!=] [$CreateBuiltinFunction$](the following steps, « »):
         1.  Let |R| be the first argument to |onRejected|.
         1.  Let |reason| be the result of [=converted to an IDL value|converting=]
             |R| to an IDL value of type {{any}}.
@@ -8094,12 +8092,279 @@ records.
             return <emu-val>undefined</emu-val>.
         1.  Otherwise, return the result of performing any steps that were required to be run if the promise was rejected,
             with |reason| as the rejection reason.
-    1.  Return [=!=] [$PerformPromiseThen$](|promise|, |onFulfilled|, |onRejected|).
+    1.  Let |newCapability| be ? [$NewPromiseCapability$]({{%Promise%}}).
+    1.  Return [=!=] [$PerformPromiseThen$](|promise|.\[[Promise]], |onFulfilled|, |onRejected|, |newCapability|).
 </div>
 
 <p class="issue">
     Include an example of how to write spec text using this term.
 </p>
+
+<div algorithm>
+    To <dfn export for=Promise lt="a new promise">create</dfn> a new
+    <a interface lt="Promise">Promise&lt;<var ignore>T</var>&gt;</a>, perform the following steps:
+
+    1.  Return ? [$NewPromiseCapability$]({{%Promise%}}).
+</div>
+
+<div algorithm>
+    To create a <dfn export for=Promise>resolved promise</dfn> of type
+    <a interface lt="Promise">Promise&lt;|T|&gt;</a>, with |x| (a value of type |T|), perform the
+    following steps:
+
+    1.  Let |value| be the result of [=converted to an ECMAScript value|converting=] |x| to an
+        ECMAScript value.
+    1.  Let |promiseCapability| be ? [$NewPromiseCapability$]({{%Promise%}}).
+    1.  Perform [=?=] [$Call$](|promiseCapability|.\[[Resolve]], <emu-val>undefined</emu-val>, « |value| »).
+    1.  Return |promiseCapability|.
+</div>
+
+<div algorithm>
+    To create a <dfn export for=Promise>rejected promise</dfn> of type
+    <a interface lt="Promise">Promise&lt;<var ignore>T</var>&gt;</a>, with reason |r| (an
+    ECMAScript value), perform the following steps:
+
+    1.  Let |promiseCapability| be ? [$NewPromiseCapability$]({{%Promise%}}).
+    1.  Perform [=!=] [$Call$](|promiseCapability|.\[[Reject]], <emu-val>undefined</emu-val>, « |r| »).
+    1.  Return |promiseCapability|.
+</div>
+
+<div algorithm>
+    To <dfn export for=Promise>resolve</dfn> a
+    <a interface lt="Promise">Promise&lt;|T|&gt;</a> |p| with |x| (a value of type |T|), perform
+    the following steps:
+
+    1.  Let |value| be the result of [=converted to an ECMAScript value|converting=] |x| to an
+        ECMAScript value.
+    1.  Perform [=!=] [$Call$](|p|.\[[Resolve]], <emu-val>undefined</emu-val>, « |value| »).
+</div>
+
+<div algorithm>
+    To <dfn export for=Promise>reject</dfn> a
+    <a interface lt="Promise">Promise&lt;<var ignore>T</var>&gt;</a> |p| with reason |r| (an
+    ECMAScript value), perform the following steps:
+
+    1.  Perform [=!=] [$Call$](|p|.\[[Reject]], <emu-val>undefined</emu-val>, « |r| »).
+</div>
+
+
+<h5 id="examples">Examples</h5>
+
+<div class="example" id="promise-example-delay">
+<div algorithm="delay">
+    <code>delay</code> is a function that returns a promise that will be fulfilled in
+    |ms| milliseconds. It illustrates how simply you can resolve a promise, with one line of prose.
+
+    <pre highlight="webidl">
+        interface I {
+          Promise&lt;void> delay(unrestricted double ms);
+        };
+    </pre>
+
+    1.  If |ms| is NaN, let |ms| be +0; otherwise let |ms| be the maximum of |ms| and +0.
+    1.  Let |p| be [=Promise/a new promise=].
+    1.  Run the following steps [=in parallel=]:
+        1.  Wait |ms| milliseconds.
+        1.  [=Promise/Resolve=] |p| with the {{void}} value.
+    1.  Return |p|.
+</div>
+
+The equivalent function in JavaScript would be
+
+<pre highlight="js">
+function delay(ms) {
+    // Verify the this value is correct.
+    // Verify the ms argument is passed; convert it to a Number.
+    ms = Number.isNaN(ms) ? +0 : Math.max(ms, +0);
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+</pre>
+
+or, in a more one-to-one correspondence with the specified steps,
+
+<pre highlight="js">
+function delay(ms) {
+    // Verify the this value is correct.
+    // Verify the ms argument is passed; convert it to a Number.
+    // Step 1.
+    ms = Number.isNaN(ms) ? +0 : Math.max(ms, +0);
+
+    // Step 2.
+    let resolve;
+    const p = new Promise(r => { resolve = r; });
+
+    // Step 3.
+    setTimeout(() => resolve(undefined), ms);
+
+    // Step 4.
+    return p;
+}
+</pre>
+
+</div>
+
+<div class="example" id="promise-example-validatedDelay">
+<div algorithm="validatedDelay">
+    The <code>validatedDelay</code> function is much like <a href="#promise-example-delay">the
+    <code>delay</code> function</a>, except it will validate its arguments. This shows how to use
+    rejected promises to signal immediate failure before even starting any asynchronous operations.
+
+    <pre highlight="webidl">
+        interface I {
+          Promise&lt;void> validatedDelay(unrestricted double ms);
+        };
+    </pre>
+
+    1.  If |ms| is NaN, return [=Promise/rejected promise|a promise rejected with=] a {{TypeError}}.
+    1.  If |ms| &lt; 0, return [=Promise/rejected promise|a promise rejected with=] a
+        {{RangeError}}.
+    1.  Let |p| be [=Promise/a new promise=].
+    1.  Run the following steps [=in parallel=]:
+        1.  Wait |ms| milliseconds.
+        1.  [=Promise/Resolve=] |p| with the {{void}} value.
+    1.  Return |p|.
+</div>
+
+The equivalent function in JavaScript would be
+
+<pre highlight="js">
+function validatedDelay(ms) {
+    // Verify the this value is correct.
+    // Verify the ms argument is passed; convert it to a Number.
+
+    // Step 1.
+    if (Number.isNaN(ms)) {
+        return Promise.reject(new TypeError("Not a number."));
+    }
+    // Step 2.
+    if (ms &lt; 0) {
+        return Promise.reject(new RangeError("ms must be at least zero."));
+    }
+
+    // Step 3-5.
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+</pre>
+</div>
+
+<div class="example" id="promise-example-addDelay">
+<div algorithm="addDelay">
+    <code>addDelay</code> is a function that adds an extra |ms| milliseconds of delay between
+    |promise| settling and the returned promise settling.
+
+    <pre highlight="webidl">
+        interface I {
+          Promise&lt;any> addDelay(Promise&lt;any> promise, unrestricted double ms);
+        };
+    </pre>
+
+        1.  Wait |ms| milliseconds.
+        1.  [=Promise/Resolve=] |p| with the {{void}} value.
+    1.  Return |p|.
+
+    1.  If |ms| is NaN, let |ms| be +0; otherwise let |ms| be the maximum of |ms| and +0.
+    1.  Let |p| be [=Promise/a new promise=].
+    1.  [=Upon settling=] of |promise|:
+        *   If |promise| was fulfilled with value |v|, then:
+            1.  Run the following steps [=in parallel=]:
+                1.  Wait |ms| milliseconds.
+                1.  [=Promise/Resolve=] |promise| with |v|.
+        *   If |promise| was rejected with reason |r|, then:
+            1.  Run the following steps [=in parallel=]:
+                1.  Wait |ms| milliseconds.
+                1.  [=Promise/Reject=] |promise| with |r|.
+    1.  Return |p|.
+</div>
+
+The equivalent function in JavaScript would be
+
+<pre highlight="js">
+function addDelay(promise, ms) {
+    // Verify the this value is correct.
+    // Verify the ms argument is passed; convert it to a Number.
+
+    ms = Number.isNaN(ms) ? +0 : Math.max(ms, +0);
+
+    let resolve, reject;
+    const p = new Promise((r, rr) => { resolve = r; reject = rr; });
+
+    const resolvedToPromise = Promise.resolve(promise);
+    resolvedToPromise.then(
+        v => setTimeout(() => resolve(v), ms),
+        r => setTimeout(() => reject(r), ms)
+    );
+
+    return p;
+}
+</pre>
+</div>
+
+<div class="example" id="promise-example-environment-ready">
+    <code>environment.ready</code> is an attribute that signals when some part of some environment,
+    e.g. a DOM document, becomes "ready". It illustrates how to encode environmental
+    asynchronicity.
+
+    <pre highlight="webidl">
+        interface Environment {
+          readonly attribute Promise&lt;void> ready;
+        };
+    </pre>
+
+    Every <code>Environment</code> object must have a \[[Ready]] internal slot, initialized with
+    [=Promise/a new promise=].
+
+<div algorithm="Environment-ready">
+
+    The <code>ready</code> attribute's getter must return <b>this</b>.\[[Ready]].
+
+</div>
+
+<div algorithm="Environment-create">
+    To create an <code>Environment</code> object, run the following steps:
+
+    1.  Let |environment| be [=new=] <code>Environment</code> object.
+    1.  Run the following steps [=in parallel=]:
+        1.  Do some asynchronous work.
+        1.  If |environment| becomes ready successfully, [=Promise/resolve=]
+            |environment|.\[[Ready]] with the {{void}} value.
+        1.  If |environment| fails to become ready, [=Promise/reject=] |environment|.\[[Ready]]
+            with a "{{NetworkError!!exception}}" {{DOMException}}.
+    1.  Return |environment|.
+</div>
+</div>
+
+<div class="example" id="promise-example-addBookmark">
+<div algorithm="addBookmark">
+    <code>addBookmark</code> is a function that requests that the user add the current web page as
+    a bookmark. It's drawn from
+    <a href="https://github.com/domenic/promises-unwrapping/issues/85">some iterative design
+    work</a> and illustrates a more real-world scenario of appealing to environmental asynchrony,
+    as well as immediate rejections.
+
+    <pre highlight="webidl">
+        interface I {
+          Promise&lt;void> addBookmark();
+        };
+    </pre>
+
+    1.  If this method was not invoked as a result of explicit user action, return
+        [=Promise/rejected promise|a promise rejected with=] a "{{SecurityError}}"
+        {{DOMException}}.
+    1.  If the document's mode of operation is standalone, return
+        [=Promise/rejected promise|a promise rejected with=] a "{{NotSupportedError}}"
+        {{DOMException}}.
+    1.  Let |promise| be [=Promise/a new promise=].
+    1.  Let |info| be the result of getting a web application's metadata.
+    1.  Run the following steps [=in parallel=]:
+        1.  Using |info|, and in a manner that is user-agent specific, allow the end user to make a
+            choice as to whether they want to add the bookmark.
+            1.  If the end-user aborts the request to add the bookmark (e.g., they hit escape, or
+                press a "cancel" button), [=Promise/reject=] |promise| with an "{{AbortError}}"
+                {{DOMException}}.
+            1.  Otherwise, [=Promise/resolve=] |promise| with the {{void}} value.
+    1. Return |promise|.
+</div>
+</div>
 
 
 <h4 id="es-union">Union types</h4>
