@@ -8105,7 +8105,7 @@ records.
     To <dfn export for=Promise lt="a new promise">create</dfn> a new
     <a interface lt="Promise">Promise&lt;<var ignore>T</var>&gt;</a>, perform the following steps:
 
-    1.  Return ? [$NewPromiseCapability$]({{%Promise%}}).
+    1.  Return [=?=] [$NewPromiseCapability$]({{%Promise%}}).
 </div>
 
 <div algorithm>
@@ -8115,8 +8115,8 @@ records.
 
     1.  Let |value| be the result of [=converted to an ECMAScript value|converting=] |x| to an
         ECMAScript value.
-    1.  Let |promiseCapability| be ? [$NewPromiseCapability$]({{%Promise%}}).
-    1.  Perform [=?=] [$Call$](|promiseCapability|.\[[Resolve]], <emu-val>undefined</emu-val>, « |value| »).
+    1.  Let |promiseCapability| be [=?=] [$NewPromiseCapability$]({{%Promise%}}).
+    1.  Perform [=!=] [$Call$](|promiseCapability|.\[[Resolve]], <emu-val>undefined</emu-val>, « |value| »).
     1.  Return |promiseCapability|.
 </div>
 
@@ -8125,7 +8125,7 @@ records.
     <a interface lt="Promise">Promise&lt;<var ignore>T</var>&gt;</a>, with reason |r| (an
     ECMAScript value), perform the following steps:
 
-    1.  Let |promiseCapability| be ? [$NewPromiseCapability$]({{%Promise%}}).
+    1.  Let |promiseCapability| be [=?=] [$NewPromiseCapability$]({{%Promise%}}).
     1.  Perform [=!=] [$Call$](|promiseCapability|.\[[Reject]], <emu-val>undefined</emu-val>, « |r| »).
     1.  Return |promiseCapability|.
 </div>
@@ -8418,7 +8418,7 @@ function addDelay(promise, ms) {
 
 <div class="example" id="promise-example-batchRequest">
 <div algorithm="batchRequest">
-    Several places in [[SERVICE-WORKERS]] use <a>get a promise to wait for all</a>.
+    Several places in [[SERVICE-WORKERS]] use [=get a promise to wait for all=].
     <code>batchRequest</code> illustrates a simplified version of one of their uses.
     It takes as input a [=sequence=] of URLs, and returns a promise for a [=sequence=] of
     {{Response}} objects created by fetching the corresponding URL.
