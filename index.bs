@@ -12256,21 +12256,18 @@ These additional properties are described in the sub-sections below.
 
     Some of the properties below are defined to have a [=function object=] value that
     <dfn id="dfn-forwards-to-the-internal-map-object" export>forwards to the internal map object</dfn>
-    for a given function name.  Such functions behave as follows when invoked:
+    for a given function name |name| and well-known intrinsic function |function|.
+    Such functions behave as follows when invoked:
 
     1.  Let |O| be the <emu-val>this</emu-val> value.
     1.  Let |arguments| be the list of arguments passed to this function.
-    1.  Let |name| be the function name.
     1.  If |O| [=is a platform object=],
         then [=perform a security check=], passing:
         *   the platform object |O|,
         *   an identifier equal to |name|, and
         *   the type "<code>method</code>".
     1.  If |O| does not [=implement=] <var ignore>A</var>, then [=ECMAScript/throw=] a {{ECMAScript/TypeError}}.
-    1.  Let |map| be the {{ECMAScript/Map}} object that is the value of |O|’s \[[BackingMap]] [=internal slot=].
-    1.  Let |function| be [=?=] <a abstract-op>GetMethod</a>(|map|, |name|).
-    1.  If |function| is <emu-val>undefined</emu-val>, then [=ECMAScript/throw=] a {{ECMAScript/TypeError}}.
-    1.  Return [=?=] <a abstract-op>Call</a>(|function|, |map|, |arguments|).
+    1.  Return [$Call$](|function|, |map|, |O|.\[[BackingMap]], |arguments|).
 </div>
 
 
@@ -12296,8 +12293,7 @@ with the following characteristics:
             *   the identifier "<code>size</code>", and
             *   the type "<code>getter</code>".
         1.  If |O| does not [=implement=] <var ignore>A</var>, then [=ECMAScript/throw=] a {{ECMAScript/TypeError}}.
-        1.  Let |map| be the {{ECMAScript/Map}} object that is the value of |O|’s \[[BackingMap]] [=internal slot=].
-        1.  Return <a abstract-op>Get</a>(|map|, "<code>size</code>").
+        1.  Return [=?=] [$Call$]({{%get Map.prototype.size%}}}}, |map|, |O|.\[[BackingMap]], « »).
     </div>
 
     The value of the [=function object=]’s <code class="idl">length</code> property is the Number value <emu-val>0</emu-val>.
@@ -12434,16 +12430,14 @@ must exist on |A|’s [=interface prototype object=]:
             *   the identifier "<code>set</code>", and
             *   the type "<code>method</code>".
         1.  If |O| does not [=implement=] <var ignore>A</var>, then [=ECMAScript/throw=] a {{ECMAScript/TypeError}}.
-        1.  Let |map| be the {{ECMAScript/Map}} object that is the value of |O|’s \[[BackingMap]] [=internal slot=].
         1.  Let |keyType| and |valueType| be the key and value types specified in the [=maplike declaration=].
-        1.  Let |function| be [=!=] <a abstract-op>Get</a>(|map|, "<code>set</code>").
         1.  Let |keyArg| be the first argument passed to this function, or <emu-val>undefined</emu-val> if not supplied.
         1.  Let |valueArg| be the second argument passed to this function, or <emu-val>undefined</emu-val> if not supplied.
         1.  Let |keyIDL| be the result of [=converted to an IDL value|converting=] |keyArg| to an IDL value of type |keyType|.
         1.  Let |valueIDL| be the result of [=converted to an IDL value|converting=] |valueArg| to an IDL value of type |valueType|.
         1.  Let |key| be the result of [=converted to ECMAScript values|converting=] |keyIDL| to an ECMAScript value.
         1.  Let |value| be the result of [=converted to ECMAScript values|converting=] |valueIDL| to an ECMAScript value.
-        1.  Perform [=?=] <a abstract-op>Call</a>(|function|, |map|, «|key|, |value|»).
+        1.  Perform [=!=] <a abstract-op>Call</a>({{%Map.prototype.set%}}, |O|.\[[BackingMap]], «|key|, |value|»).
         1.  Return |O|.
     </div>
 
