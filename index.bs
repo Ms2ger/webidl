@@ -11095,6 +11095,21 @@ Note: The HTML Standard defines how a security check is performed. [[!HTML]]
 
             then remove from |S| all other entries.
 
+        1.  Otherwise: if there is an entry in |S| that has two of the following types at position |i| of its type list,
+            *   a [=numeric type=]
+            *   a [=nullable type|nullable=] [=numeric type=]
+            *   {{bigint}}
+            *   a [=nullable type|nullable=] {{bigint}}
+            *   an [=annotated type=] whose [=annotated types/inner type=] is one of the above types
+            *   a [=union type=], [=nullable type|nullable=] union type, or [=annotated type|annotated=] union type
+                that has one of the above types in its [=flattened member types=]
+
+            then remove from |S| all other entries, and run the following steps:
+
+            1. Let |numeric| be the 
+            1. Let |value| be the result of [=XXX|converting=] |V| to either that [=numeric type=] or {{bigint}}.
+            
+
         1.  Otherwise: if there is an entry in |S| that has one of the following types at position |i| of its type list,
             *   a [=numeric type=]
             *   a [=nullable type|nullable=] [=numeric type=]
